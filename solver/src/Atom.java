@@ -11,12 +11,6 @@ public class Atom implements IAtom {
         this.symbol = symbol;
     }
 
-
-    @Override
-    public String toString() {
-        return symbol;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -28,5 +22,10 @@ public class Atom implements IAtom {
     @Override
     public int hashCode() {
         return Objects.hash(symbol);
+    }
+
+    @Override
+    public String toString() {
+        return symbol;
     }
 }

@@ -8,11 +8,10 @@ import java.io.FileReader;
 import java.io.IOException;
 
 /**
- * Parse the formula and start the solver.
+ * Parse the formula and pass it to the solver.
  */
 public class Main {
     private static final Log LOG = LogFactory.getLog(Main.class);
-
 
     public static void main(String[] args) {
 
@@ -24,7 +23,7 @@ public class Main {
 
         String path = args[0];
         Formula formula = parseFormula(path);
-        System.out.println("FORMULA:\n" + formula.toString());
+        System.out.println(Solver.solve(formula));
     }
 
 
@@ -102,6 +101,8 @@ public class Main {
      * @return corresponding IAtom object
      */
     private static IAtom symbolToAtom(String symbol) {
+        symbol = symbol.trim();
+
         if (symbol.equals("1")) {
             return new Verum();
         } else if (symbol.equals("0")) {
