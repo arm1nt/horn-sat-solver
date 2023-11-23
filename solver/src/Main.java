@@ -23,7 +23,7 @@ public class Main {
 
         String path = args[0];
         Formula formula = parseFormula(path);
-        System.out.println(Solver.solve(formula));
+        System.out.println(Solver.solve(formula, System.out));
     }
 
 

@@ -1,3 +1,4 @@
+import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -14,16 +15,13 @@ public class Solver {
     private static final Falsum FALSUM = new Falsum();
 
 
-
-    //Maybe pass an outputstrean, so we can write the variable assignment to either a file or to stdout
-    public static String solve(Formula formula) {
+    public static String solve(Formula formula, PrintStream out) {
 
         //Set of all unique atoms that are contained in any of the clauses
         Set<IAtom> atoms = formula.containedAtoms();
 
         //All atoms that are in this set are assigned the value 'true', the rest is assigned the value 'false'
         Set<IAtom> marked = new HashSet<>();
-
 
         if (atoms.contains(VERUM)) {
             marked.add(VERUM); //Verum must always be assigned the truth value 'true'
@@ -44,7 +42,14 @@ public class Solver {
         }
 
         //Print truth value assignment
-        //TODO:
+        for (IAtom atom : atoms) {
+            out.print(atom + ": ");
+            if (marked.contains(atom)) {
+                out.println("true");
+            } else {
+                out.println("false");
+            }
+        }
 
         return SAT;
     }
