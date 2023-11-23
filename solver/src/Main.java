@@ -39,7 +39,7 @@ public class Main {
         Formula formula = new Formula();
         String line = null;
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(path)); ) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
 
             while ((line = reader.readLine()) != null) {
 
@@ -48,6 +48,7 @@ public class Main {
             }
         } catch (InvalidClauseException e) {
             LOG.error("Clause '" + line + "' is invalid\n" + e.getMessage());
+            System.exit(1);
         } catch (FileNotFoundException e) {
             LOG.error("File " + path + " not found.");
             System.exit(1);
@@ -75,10 +76,29 @@ public class Main {
         }
 
         String[] splitLine = line.split("->");
+
+        if (splitLine.length != 2) {
+            throw new InvalidClauseException("Clause must have symbols on the left" +
+                    " and the right side of the implication");
+        }
+
         String leftSide = splitLine[0].trim();
         String rightSide = splitLine[1].trim();
 
-        //TODO: validity checks for left and right side.
+
+        if (leftSide.length() < 1) {
+            throw new InvalidClauseException("There needs to be at least one symbol" +
+                    " on the left side of the implication!");
+        }
+
+        if (rightSide.length() < 1) {
+            throw new InvalidClauseException("There needs to be at least one symbol" +
+                    " on the right side of the implication!");
+        }
+
+        if (rightSide.contains(" ")) {
+            throw new InvalidClauseException("Right side of the implication must contain exactly one symbol!");
+        }
 
         Clause clause = new Clause();
 
