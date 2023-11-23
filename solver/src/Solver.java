@@ -1,4 +1,5 @@
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -15,7 +16,7 @@ public class Solver {
     private static final Falsum FALSUM = new Falsum();
 
 
-    public static String solve(Formula formula, PrintStream out) {
+    public static String solve(Formula formula, PrintWriter out) {
 
         //Set of all unique atoms that are contained in any of the clauses
         Set<IAtom> atoms = formula.containedAtoms();

@@ -1,29 +1,76 @@
+import Exceptions.InvalidAtomException;
 import Exceptions.InvalidClauseException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Parse the formula and pass it to the solver.
  */
 public class Main {
-    private static final Log LOG = LogFactory.getLog(Main.class);
 
     public static void main(String[] args) {
 
-        //command line parsing
-        if (args.length != 1) {
-            System.err.println("Error: expected the path to the input file containing the formula as only argument");
-            System.exit(1);
+        //argument parsing
+        String path = null;
+        PrintWriter out = null;
+
+        if (args.length < 1) {
+            usage();
+        } else if(args.length == 1) {
+            path = args[0];
+            out = new PrintWriter(System.out);
+        } else if (args.length == 3) {
+            //Find at which index the -o option is, so we can differentiate between the input and the ouput file.
+            List<String> arguments = List.of(args);
+            List<Integer> possibleIndicesForInputFile = new ArrayList<>(List.of(0, 1, 2));
+
+            int index = arguments.indexOf("-o");
+
+            if (index == -1) {
+                usage();
+            }
+
+            if (index+1 < arguments.size()) {
+                possibleIndicesForInputFile.remove(Integer.valueOf(index));
+                possibleIndicesForInputFile.remove(Integer.valueOf(index+1));
+
+                try {
+                    out = new PrintWriter(new FileWriter(arguments.get(index+1)));
+                } catch (IOException e) {
+                    System.err.println("Error: Unable to open / create file by the name: " + arguments.get(index+1));
+                    System.exit(1);
+                }
+            } else {
+                usage();
+            }
+
+            path = arguments.get(possibleIndicesForInputFile.get(0));
+        } else {
+            usage();
         }
 
-        String path = args[0];
         Formula formula = parseFormula(path);
-        System.out.println(Solver.solve(formula, System.out));
+        System.out.println(Solver.solve(formula, out));
+
+        if (out != null) {
+            out.flush();
+            out.close();
+        }
+    }
+
+    /**
+     * Prints the correct usage for the program, and then terminates.
+     */
+    private static void usage() {
+        System.err.println("Usage: Solver [-o outputFile] inputFile");
+        System.exit(1);
     }
 
 
@@ -34,7 +81,6 @@ public class Main {
      * @return formula representing the formula specified in the given file
      */
     private static Formula parseFormula(String path) {
-        LOG.trace("parseFormula(" + path + ")");
 
         Formula formula = new Formula();
         String line = null;
@@ -47,17 +93,16 @@ public class Main {
                 formula.addClause(clause);
             }
         } catch (InvalidClauseException e) {
-            LOG.error("Clause '" + line + "' is invalid\n" + e.getMessage());
+            System.err.println("Clause '" + line + "' is invalid\n" + e.getMessage());
             System.exit(1);
         } catch (FileNotFoundException e) {
-            LOG.error("File " + path + " not found.");
+            System.err.println("File " + path + " not found.");
             System.exit(1);
         } catch (IOException e) {
-            LOG.error("There was an error reading from the provided file.");
+            System.err.println("There was an error reading from the provided file.");
             System.exit(1);
         }
 
-        LOG.trace("Successfully parsed formula");
         return formula;
     }
 
@@ -69,7 +114,6 @@ public class Main {
      * @throws InvalidClauseException is thrown if the clause is invalid, e.g. missing implication.
      */
     private static Clause parseClause(String line) throws InvalidClauseException {
-        LOG.trace("parseClause(" + line + ")");
 
         if (!line.contains("->")) {
             throw new InvalidClauseException("Clause does not contain an implication.");
@@ -91,6 +135,15 @@ public class Main {
                     " on the left side of the implication!");
         }
 
+        if (leftSide.startsWith("&")) {
+            throw new InvalidClauseException("Clause must not start with '&'");
+        }
+
+        if (leftSide.endsWith("&")) {
+            throw new InvalidClauseException("Clause mot not end with '&'");
+        }
+
+
         if (rightSide.length() < 1) {
             throw new InvalidClauseException("There needs to be at least one symbol" +
                     " on the right side of the implication!");
@@ -104,9 +157,16 @@ public class Main {
 
         //Parse the conjuncts
         String[] conjuncts = leftSide.split("&");
-        for (String conjunct : conjuncts) {
-            clause.addConjunct(symbolToAtom(conjunct));
+
+        try {
+            for (String conjunct : conjuncts) {
+                clause.addConjunct(symbolToAtom(conjunct));
+            }
+        } catch (InvalidAtomException e) {
+            System.err.println(e.getMessage());
+            System.exit(1);
         }
+
 
         //Set the atom on the right side of the implication
         clause.setRightSide(symbolToAtom(rightSide));
@@ -114,14 +174,24 @@ public class Main {
         return clause;
     }
 
+
     /**
      * Takes the symbol representation and returns its corresponding IAtom object subtype.
      *
      * @param symbol symbol to convert to IAtom object
      * @return corresponding IAtom object
+     * @throws InvalidAtomException is thrown if the given symbol is invalid, e.g. contains whitespaces space, is blank
      */
-    private static IAtom symbolToAtom(String symbol) {
+    private static IAtom symbolToAtom(String symbol) throws InvalidAtomException {
         symbol = symbol.trim();
+
+        if (symbol.length() == 0) { //e.g. a & b b & c
+            throw new InvalidAtomException("Symbol '" + symbol + "' is invalid:\nSymbol must not be blank!");
+        }
+
+        if (symbol.contains(" ")) { //e.g. a & & b
+            throw new InvalidAtomException("Symbol '" + symbol + "' is invalid:\nSymbol must not contain whitespaces");
+        }
 
         if (symbol.equals("1")) {
             return new Verum();
