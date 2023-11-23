@@ -16,7 +16,7 @@ public class Atom implements IAtom {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Atom atom = (Atom) o;
-        return Objects.equals(symbol, atom.symbol);
+        return symbol.equals(atom.symbol);
     }
 
     @Override

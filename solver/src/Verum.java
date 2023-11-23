@@ -14,7 +14,7 @@ public class Verum implements  IAtom {
     }
 
     @Override
-    public int hashCode() { //hashset filters based on the hashcode
+    public int hashCode() {
         return Objects.hash(TRUTH_VALUE);
     }
 
