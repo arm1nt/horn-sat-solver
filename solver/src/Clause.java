@@ -68,16 +68,25 @@ public class Clause {
 
     @Override
     public boolean equals(Object o) {
-        //they are equal if they contain the same atoms in the conjunct
-        //(it does not matter how many times an atom occurs in the conjunction (i.e. if 'a' occurs twice))
-        //and if they have the same atom on the right side of the implication
-        //TODO
+        //Two clauses are equal if they have the same atoms in the conjunct (it does not matter if one clause
+        // contains e.g. contains atom 'a' two times and the other only contains it one time).
+        //It's also necessary that they have the same symbol on the right side of the implication.
         if (o == this) return true;
         if (o == null || o.getClass() != this.getClass()) return false;
 
-        Clause clause = (Clause) o;
+        Clause otherClause = (Clause) o;
 
-        return super.equals(o);
+        if (!this.rightSide.equals(otherClause.rightSide)) return false;
+
+        Set<IAtom> clauseAtoms = new HashSet<>(this.leftSide);
+        Set<IAtom> otherClauseAtoms = new HashSet<>(otherClause.leftSide);
+
+        for (IAtom atom : clauseAtoms) {
+            if (!otherClauseAtoms.contains(atom)) return false;
+            otherClauseAtoms.remove(atom);
+        }
+
+        return otherClauseAtoms.size() == 0;
     }
 
     @Override
